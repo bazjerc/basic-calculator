@@ -53,7 +53,7 @@ class Calculator {
     // Handle operator button click
     if (button.dataset.btnType === "operator") {
       if (this.prevOperand === "") {
-        this.prevOperand = this.currentOperand + ` ${value}`;
+        this.prevOperand = Number.parseFloat(this.currentOperand) + ` ${value}`;
         this.currentOperand = "0";
       } else if (this.prevOperand !== "") {
         this.prevOperand = this.compute() + ` ${value}`;
@@ -65,7 +65,7 @@ class Calculator {
     // Handle compute button click
     if (button.dataset.btnType === "compute") {
       if (this.prevOperand === "") {
-        return;
+        this.currentOperand = String(Number.parseFloat(this.currentOperand));
       } else {
         this.currentOperand = this.compute();
         this.prevOperand = "";
@@ -107,17 +107,30 @@ class Calculator {
           Number.parseFloat(this.prevOperand) * Number(this.currentOperand);
         break;
       case "÷":
-        result =
-          Number.parseFloat(this.prevOperand) / Number(this.currentOperand);
+        if (this.currentOperand === "0") {
+          result = "Error";
+          this.disable();
+        } else {
+          result =
+            Number.parseFloat(this.prevOperand) / Number(this.currentOperand);
+        }
         break;
     }
     return String(result);
+  }
+
+  disable() {
+    calculatorButtons.forEach(
+      (btn) =>
+        btn.dataset.btnType !== "ac" && btn.setAttribute("disabled", true)
+    );
   }
 
   reset() {
     this.currentOperand = "0";
     this.prevOperand = "";
     this.operator = "";
+    calculatorButtons.forEach((btn) => btn.removeAttribute("disabled"));
   }
 }
 
