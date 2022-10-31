@@ -26,8 +26,35 @@ class Calculator {
   }
 
   updateDisplay() {
-    currentOperandElement.textContent = this.currentOperand;
-    previousOperandElement.textContent = this.prevOperand;
+    currentOperandElement.textContent = this.formatDisplayNumber(
+      this.currentOperand
+    );
+    previousOperandElement.textContent = `${this.formatDisplayNumber(
+      this.prevOperand
+    )} ${this.operator}`;
+  }
+
+  // Format display number to show comma separator
+  formatDisplayNumber(num) {
+    if (num === "Error") return num;
+
+    const integerDigits = parseInt(num.split(".")[0]);
+    const decimalDigits = num.split(".")[1];
+    let integerDisplay;
+    
+    if (isNaN(integerDigits)) { // if input is empty
+      integerDisplay = "";
+    } else {
+      integerDisplay = integerDigits.toLocaleString("en", {
+        maximumFractionDigits: 0,
+      });
+    }
+
+    if (decimalDigits !== undefined) {
+      return `${integerDisplay}.${decimalDigits}`;
+    } else {
+      return integerDisplay;
+    }
   }
 
   handleButtonClick(e) {
@@ -47,16 +74,19 @@ class Calculator {
 
     // Handle point button click
     if (button.dataset.btnType === "point") {
-      !this.currentOperand.includes(".") ? (this.currentOperand += ".") : null;
+      if (this.currentOperand.includes(".")) return;
+      this.currentOperand += ".";
     }
 
     // Handle operator button click
     if (button.dataset.btnType === "operator") {
-      if (this.prevOperand === "") {
-        this.prevOperand = Number.parseFloat(this.currentOperand) + ` ${value}`;
+      if (this.prevOperand === "" && this.currentOperand === "0") {
+        return;
+      } else if (this.prevOperand === "" && this.currentOperand !== "0") {
+        this.prevOperand = String(parseFloat(this.currentOperand));
         this.currentOperand = "0";
-      } else if (this.prevOperand !== "") {
-        this.prevOperand = this.compute() + ` ${value}`;
+      } else if (this.prevOperand !== "" && this.currentOperand !== "0") {
+        this.prevOperand = this.compute();
         this.currentOperand = "0";
       }
       this.operator = value;
@@ -65,10 +95,11 @@ class Calculator {
     // Handle compute button click
     if (button.dataset.btnType === "compute") {
       if (this.prevOperand === "") {
-        this.currentOperand = String(Number.parseFloat(this.currentOperand));
+        return;
       } else {
         this.currentOperand = this.compute();
         this.prevOperand = "";
+        this.operator = "";
       }
     }
 
@@ -92,27 +123,25 @@ class Calculator {
   }
 
   compute() {
+    const prev = parseFloat(this.prevOperand);
+    const current = parseFloat(this.currentOperand);
     let result;
     switch (this.operator) {
       case "+":
-        result =
-          Number.parseFloat(this.prevOperand) + Number(this.currentOperand);
+        result = prev + current;
         break;
       case "-":
-        result =
-          Number.parseFloat(this.prevOperand) - Number(this.currentOperand);
+        result = prev - current;
         break;
       case "*":
-        result =
-          Number.parseFloat(this.prevOperand) * Number(this.currentOperand);
+        result = prev * current;
         break;
       case "÷":
-        if (this.currentOperand === "0") {
+        if (current === 0) {
           result = "Error";
           this.disable();
         } else {
-          result =
-            Number.parseFloat(this.prevOperand) / Number(this.currentOperand);
+          result = prev / current;
         }
         break;
     }
